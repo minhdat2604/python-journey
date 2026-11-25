@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Week 02 — TODO tự chấm</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: #18243d;
+      background: #f2f5fb;
+      --ink-soft: #59677f;
+      --line: #e3e9f3;
+      --blue: #4c59d8;
+      --mint: #54e0b3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 8% 4%, rgba(107, 124, 241, .13), transparent 30rem),
+        radial-gradient(ellipse at 95% 20%, rgba(76, 211, 176, .13), transparent 28rem),
+        #f2f5fb;
+    }
+    main { max-width: 900px; margin: 0 auto; padding: 30px 18px 56px; }
+    header, section, .notice {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 24px;
+      margin: 18px 0;
+      background: rgba(255, 255, 255, .94);
+      box-shadow: 0 12px 35px rgba(33, 50, 92, .06);
+    }
+    header {
+      position: relative;
+      overflow: hidden;
+      color: white;
+      border: 0;
+      padding: 34px;
+      background: linear-gradient(125deg, #263d91 0%, #505bd4 55%, #775de0 100%);
+      box-shadow: 0 20px 45px rgba(65, 75, 174, .22);
+    }
+    header::after {
+      content: "🐍";
+      position: absolute;
+      right: 38px;
+      top: 18px;
+      font-size: 6rem;
+      opacity: .15;
+      transform: rotate(-14deg);
+      pointer-events: none;
+    }
+    header > * { position: relative; z-index: 1; }
+    h1, h2, p { margin-top: 0; }
+    h1 { margin-bottom: 9px; font-size: clamp(1.8rem, 5vw, 2.6rem); letter-spacing: -.04em; }
+    h2 { display: flex; align-items: center; gap: 9px; font-size: 1.25rem; margin-bottom: 7px; }
+    header > p { max-width: 620px; margin-bottom: 23px; }
+    .muted { color: var(--ink-soft); }
+    header .muted { color: #e4e8ff; }
+    section { transition: transform .18s ease, box-shadow .18s ease; }
+    section:hover { transform: translateY(-2px); box-shadow: 0 16px 38px rgba(33, 50, 92, .09); }
+    section:nth-of-type(2) { border-top: 4px solid #6b79ef; }
+    section:nth-of-type(3) { border-top: 4px solid #43b99a; }
+    section:nth-of-type(4) { border-top: 4px solid #e6a448; }
+    section:nth-of-type(2) h2::before { content: "🎒"; }
+    section:nth-of-type(3) h2::before { content: "🔄"; }
+    section:nth-of-type(4) h2::before { content: "🧮"; }
+    .summary { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 18px 0 9px; font-weight: 700; }
+    #scoreText { color: #bdffea; }
+    progress { width: 100%; height: 15px; border: 0; border-radius: 99px; overflow: hidden; accent-color: var(--mint); }
+    progress::-webkit-progress-bar { background: rgba(255, 255, 255, .2); border-radius: 99px; }
+    progress::-webkit-progress-value { background: linear-gradient(90deg, #63efbd, #b0ffe0); border-radius: 99px; transition: width .35s ease; }
+    progress::-moz-progress-bar { background: linear-gradient(90deg, #63efbd, #b0ffe0); border-radius: 99px; }
+    .task {
+      display: grid;
+      grid-template-columns: 25px 1fr auto;
+      gap: 11px;
+      align-items: start;
+      margin: 0 -9px;
+      padding: 14px 9px;
+      border-top: 1px solid #edf0f6;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .15s ease;
+    }
+    .task:hover { background: #f7f8fe; }
+    .task:first-of-type { margin-top: 15px; }
+    .task input { appearance: none; width: 21px; height: 21px; margin: 1px 0 0; border: 2px solid #c6cede; border-radius: 7px; background: white; cursor: pointer; transition: .15s ease; }
+    .task input:checked { background: #39b98f; border-color: #39b98f; }
+    .task input:checked::after { content: "✓"; display: block; color: white; font-weight: 800; text-align: center; line-height: 17px; }
+    .task input:checked + span { color: #627188; }
+    .points { color: #45536b; white-space: nowrap; font-size: .86rem; font-weight: 700; background: #f0f3fa; padding: 4px 9px; border-radius: 99px; }
+    code { color: #3442a4; background: #eef0ff; padding: 3px 6px; border-radius: 6px; font-size: .92em; overflow-wrap: anywhere; }
+    .notice { display: flex; gap: 13px; border-color: #f4d596; background: #fff9eb; line-height: 1.6; }
+    .notice::before { content: "💡"; font-size: 1.35rem; }
+    .notice strong { color: #78500c; }
+    .guide { border: 1px solid #d9defe; background: linear-gradient(145deg, #fff, #f5f6ff); }
+    .guide-kicker { display: inline-block; padding: 5px 10px; margin-bottom: 10px; border-radius: 99px; color: #3947b7; background: #e9ebff; font-size: .78rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; margin: 18px 0; }
+    .step { padding: 14px; border: 1px solid #e6e9f5; border-radius: 14px; background: white; }
+    .step-number { display: inline-grid; place-items: center; width: 28px; height: 28px; margin-bottom: 8px; border-radius: 9px; color: white; background: linear-gradient(135deg, #5362df, #8a64df); font-weight: 800; }
+    .step strong { display: block; margin-bottom: 4px; }
+    .step p { margin: 0; color: var(--ink-soft); font-size: .88rem; line-height: 1.45; }
+    .quick-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 15px; }
+    .quick-links a { padding: 8px 12px; color: #3947b7; background: #eef0ff; border-radius: 9px; font-weight: 700; text-decoration: none; }
+    .quick-links a:hover { background: #e0e4ff; }
+    .next-step { margin: 14px 0 0; padding: 11px 13px; border-radius: 11px; background: #eafaf3; color: #176849; font-weight: 650; }
+    .filter-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+    .filter-bar strong { margin-right: 4px; }
+    .filter-button { padding: 8px 12px; color: #47536b; background: white; border: 1px solid #dce3ee; border-radius: 99px; box-shadow: none; font-size: .9rem; }
+    .filter-button[aria-pressed="true"] { color: white; background: #4c59d8; border-color: #4c59d8; }
+    .task[hidden] { display: none; }
+    .task.is-done { background: #f0fbf6; }
+    .quiz-intro { color: var(--ink-soft); margin-bottom: 18px; }
+    .quiz-item { padding: 15px 0; border-top: 1px solid #edf0f6; }
+    .quiz-item label { display: block; font-weight: 700; margin-bottom: 9px; }
+    .quiz-item select { width: 100%; max-width: 520px; padding: 10px 12px; border: 1px solid #d5ddec; border-radius: 10px; background: white; color: #18243d; font: inherit; }
+    .quiz-item select.correct { border-color: #32a77f; background: #effbf6; }
+    .quiz-item select.incorrect { border-color: #e28a77; background: #fff5f2; }
+    .explanation { display: block; color: #85520e; margin-top: 8px; line-height: 1.5; }
+    .quiz-result { display: none; margin-top: 17px; padding: 15px 17px; border-radius: 13px; background: #eef2ff; font-weight: 700; }
+    .quiz-result.show { display: block; }
+    .quiz-result.good { color: #176849; background: #e8f8f0; }
+    .quiz-result.try { color: #85520e; background: #fff5df; }
+    .luck-message { display: flex; align-items: center; gap: 12px; padding: 13px 16px; margin: 14px 0 18px; border: 1px solid #dcd8ff; border-radius: 14px; color: #44398f; background: linear-gradient(100deg, #f4f0ff, #fff6df); font-weight: 750; }
+    .luck-icon { font-size: 1.55rem; animation: bob 2s ease-in-out infinite; }
+    .reward-panel { display: none; padding: 17px; margin-top: 14px; text-align: center; border: 1px solid #f0d17d; border-radius: 16px; color: #67450c; background: radial-gradient(circle at top, #fff9d7, #fff0bd); }
+    .reward-panel.show { display: block; animation: pop-in .35s ease-out both; }
+    .reward-stars { color: #a36a00; font-size: 1.15rem; font-weight: 850; }
+    .reward-badge { display: inline-block; margin-top: 8px; padding: 7px 12px; border-radius: 99px; color: #553b8d; background: #eee5ff; font-weight: 800; }
+    .confetti-layer { position: fixed; inset: 0; z-index: 10; overflow: hidden; pointer-events: none; }
+    .confetti { position: absolute; top: -24px; left: var(--x); color: var(--color); font-size: var(--size); animation: fall var(--duration) ease-in forwards; animation-delay: var(--delay); }
+    @keyframes fall { to { transform: translate3d(var(--drift), 105vh, 0) rotate(700deg); opacity: 0; } }
+    @keyframes bob { 50% { transform: translateY(-4px) rotate(7deg); } }
+    @keyframes pop-in { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
+    .real-grader { background: linear-gradient(130deg, #192d68, #3c4eb0); color: white; border: 0; }
+    .real-grader h2 { color: white; }
+    .real-grader p { color: #e4e9ff; }
+    .command { display: block; padding: 13px; margin: 12px 0; background: rgba(6, 13, 42, .36); color: #c7ffe9; border-radius: 10px; overflow-wrap: anywhere; }
+    .real-grader button { color: #183451; background: #a8f5d5; box-shadow: none; }
+    button { border: 0; border-radius: 11px; padding: 11px 16px; background: var(--blue); color: white; font: inherit; font-weight: 650; cursor: pointer; box-shadow: 0 5px 13px rgba(76, 89, 216, .2); transition: transform .15s ease, box-shadow .15s ease; }
+    button:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(76, 89, 216, .25); }
+    button.secondary { background: white; color: #46536a; border: 1px solid #dce3ee; box-shadow: none; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    main > p.muted { font-size: .9rem; text-align: center; margin-top: 14px; }
+    :focus-visible { outline: 3px solid #f0a92d; outline-offset: 3px; }
+    @media (max-width: 560px) {
+      main { padding: 14px 12px 36px; }
+      header, section, .notice { padding: 19px; border-radius: 17px; }
+      header::after { right: 17px; top: 16px; font-size: 4.5rem; }
+      .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .task { grid-template-columns: 25px 1fr; }
+      .points { grid-column: 2; justify-self: start; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Week 02 — TODO tự chấm</h1>
+    <p class="muted">Làm ba bài tập gốc, tự thử kết quả rồi đánh dấu từng mục đã kiểm tra.</p>
+    <div class="summary"><span id="progressText">Đã kiểm tra 0/10 TODO bắt buộc</span><span id="scoreText">Điểm tự đánh giá: 0/10</span></div>
+    <progress id="progress" value="0" max="10" aria-label="Tiến độ TODO bắt buộc"></progress>
+  </header>
+
+  <div class="notice">
+    <strong>Lưu ý:</strong> Điểm ở đây chỉ tính theo các ô em đánh dấu; nó không chạy hoặc xác nhận code. Để kiểm tra tự động, chạy lệnh bên dưới trong Terminal ở thư mục gốc dự án. Đây là điểm tự luyện, không phải điểm học phần.
+  </div>
+
+  <section class="guide" id="start">
+    <span class="guide-kicker">Bắt đầu tại đây · đi từng bước</span>
+    <h2>Hướng dẫn bắt đầu hành trình</h2>
+    <p class="muted">Làm từng bước nhỏ. Hoàn thành bài trong VS Code trước, rồi quay lại đây đánh dấu những mục bạn đã tự chạy và kiểm tra.</p>
+    <div class="steps">
+      <article class="step"><span class="step-number">1</span><strong>Mở đúng dự án</strong><p>Mở thư mục gốc <code>python-journey-main</code> trong VS Code.</p></article>
+      <article class="step"><span class="step-number">2</span><strong>Mở bài tập</strong><p>Bắt đầu với <code>ex01_variables.py</code>; làm các TODO bắt buộc theo thứ tự.</p></article>
+      <article class="step"><span class="step-number">3</span><strong>Chạy và thử</strong><p>Lưu file, chạy bằng Python. Thử dữ liệu mẫu và tự giải thích kết quả.</p></article>
+      <article class="step"><span class="step-number">4</span><strong>Chấm lại</strong><p>Chạy máy chấm ở cuối trang. Đọc mục cần sửa, quay lại code rồi thử lần nữa.</p></article>
+    </div>
+    <nav class="quick-links" aria-label="Đi tới phần">
+      <a href="#ex01">Bài 01 · Biến</a><a href="#ex02">Bài 02 · Chuyển kiểu</a><a href="#ex03">Bài 03 · Tính toán</a><a href="#quiz">Quiz nhanh</a><a href="#grader">Máy chấm code</a>
+    </nav>
+    <p class="next-step" id="nextStep" role="status" aria-live="polite">Bước tiếp theo: hoàn thành và kiểm tra TODO đầu tiên ở Bài 01.</p>
+  </section>
+
+  <div class="filter-bar" role="group" aria-label="Lọc danh sách TODO">
+    <strong>Hiện TODO:</strong>
+    <button type="button" class="filter-button" data-filter="all" aria-pressed="true">Tất cả</button>
+    <button type="button" class="filter-button" data-filter="todo" aria-pressed="false">Chưa xong</button>
+    <button type="button" class="filter-button" data-filter="done" aria-pressed="false">Đã xong</button>
+  </div>
+
+  <section id="ex01">
+    <h2>Bài 01 — Biến <span class="muted">(3 điểm)</span></h2>
+    <p class="muted"><code>weeks/week-02-variables-types/exercises/ex01_variables.py</code></p>
+    <label class="task"><input type="checkbox" data-id="ex01-1" data-points="1"><span><strong>TODO 1:</strong> Tạo 4 biến có kiểu <code>str</code>, <code>int</code>, <code>float</code>, <code>bool</code>; in giá trị và kiểu bằng <code>type()</code>.</span><span class="points">1 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="ex01-2" data-points="1"><span><strong>TODO 2:</strong> Đổi chỗ <code>a = 10</code> và <code>b = 20</code> không dùng biến tạm; kiểm tra kết quả.</span><span class="points">1 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="ex01-3" data-points="1"><span><strong>TODO 3:</strong> Bắt đầu <code>x = 100</code>, dùng lần lượt <code>+=</code>, <code>-=</code>, <code>*=</code>, <code>//=</code> và in sau mỗi bước.</span><span class="points">1 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="opt-ex01"><span><strong>Thử thách:</strong> Multiple assignment để gán họ, tên và tuổi. Mục này không tính điểm tự luyện.</span><span class="points">Tùy chọn</span></label>
+  </section>
+
+  <section id="ex02">
+    <h2>Bài 02 — Chuyển kiểu <span class="muted">(3,5 điểm)</span></h2>
+    <p class="muted"><code>weeks/week-02-variables-types/exercises/ex02_type_conversion.py</code></p>
+    <label class="task"><input type="checkbox" data-id="ex02-1" data-points="0.75"><span><strong>TODO 1:</strong> Chuyển chuỗi <code>"42"</code> thành số nguyên, cộng 8 và in 50.</span><span class="points">0,75 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="ex02-2" data-points="0.75"><span><strong>TODO 2:</strong> Chuyển <code>3.14159</code> bằng <code>int()</code> và in kết quả 3.</span><span class="points">0,75 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="ex02-3" data-points="0.75"><span><strong>TODO 3:</strong> In <code>bool()</code> cho <code>0</code>, <code>1</code>, chuỗi rỗng, chuỗi có chữ, danh sách rỗng và danh sách có phần tử.</span><span class="points">0,75 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="ex02-4" data-points="1.25"><span><strong>TODO 4:</strong> Nhập chiều cao (m) và cân nặng (kg), tính BMI = cân nặng / chiều cao² và in một chữ số thập phân.</span><span class="points">1,25 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="opt-ex02"><span><strong>Thử thách:</strong> Đổi số giây thành giờ, phút, giây. Mục này không tính điểm tự luyện.</span><span class="points">Tùy chọn</span></label>
+  </section>
+
+  <section id="ex03">
+    <h2>Bài 03 — Input và phép tính <span class="muted">(3,5 điểm)</span></h2>
+    <p class="muted"><code>weeks/week-02-variables-types/exercises/ex03_input_calc.py</code></p>
+    <label class="task"><input type="checkbox" data-id="ex03-1" data-points="1.5"><span><strong>TODO 1:</strong> Nhập hai số, chuyển kiểu phù hợp rồi in tổng, hiệu, tích và thương.</span><span class="points">1,5 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="ex03-2" data-points="1"><span><strong>TODO 2:</strong> Nhập bán kính; dùng <code>pi = 3.14159</code> tính diện tích và chu vi hình tròn.</span><span class="points">1 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="ex03-3" data-points="1"><span><strong>TODO 3:</strong> Nhập giá gốc và phần trăm giảm; tính giá sau giảm. Thử ví dụ 500000 và 20% để được 400000.</span><span class="points">1 điểm</span></label>
+    <label class="task"><input type="checkbox" data-id="opt-ex03"><span><strong>Thử thách:</strong> Đổi VNĐ sang USD. Mục này không tính điểm tự luyện.</span><span class="points">Tùy chọn</span></label>
+  </section>
+
+  <section id="quiz">
+    <h2>Máy chấm nhanh — thử kiến thức ⚡</h2>
+    <p class="quiz-intro">Chọn đáp án cho từng câu rồi bấm chấm. Máy sẽ chấm ngay và giải thích câu sai. Phần này kiểm tra kiến thức, không đọc code trong các file Python.</p>
+    <div class="luck-message"><span class="luck-icon" aria-hidden="true">🍀</span><span id="luckMessage">Chúc bạn bình tĩnh, tự tin và gặp nhiều may mắn!</span></div>
+    <p class="quiz-intro"><strong>Quà vui:</strong> mỗi câu đúng nhận 5 ⭐. Đạt 4, 6 hoặc 8 câu đúng để mở huy hiệu mới!</p>
+    <div class="quiz-item"><label for="q1">1. <code>int("42") + 8</code> bằng bao nhiêu?</label><select id="q1" data-answer="50" data-explain="Chuỗi \"42\" được đổi thành số nguyên 42, rồi cộng 8."><option value="">-- Chọn đáp án --</option><option value="428">428</option><option value="50">50</option><option value="42">42</option></select></div>
+    <div class="quiz-item"><label for="q2">2. <code>int(3.14159)</code> cho kết quả nào?</label><select id="q2" data-answer="3" data-explain="int() bỏ phần thập phân; kết quả là 3."><option value="">-- Chọn đáp án --</option><option value="3">3</option><option value="4">4</option><option value="3.14">3.14</option></select></div>
+    <div class="quiz-item"><label for="q3">3. Kết quả của <code>bool("")</code> là gì?</label><select id="q3" data-answer="False" data-explain="Chuỗi rỗng là giá trị rỗng nên bool của nó trả về False."><option value="">-- Chọn đáp án --</option><option value="True">True</option><option value="False">False</option></select></div>
+    <div class="quiz-item"><label for="q4">4. <code>input()</code> trả về kiểu dữ liệu nào trước khi chuyển kiểu?</label><select id="q4" data-answer="str" data-explain="input() luôn trả về chuỗi; cần dùng int() hoặc float() để tính số."><option value="">-- Chọn đáp án --</option><option value="int">int</option><option value="float">float</option><option value="str">str</option></select></div>
+    <div class="quiz-item"><label for="q5">5. Công thức BMI đúng là công thức nào?</label><select id="q5" data-answer="bmi" data-explain="BMI = cân nặng (kg) / chiều cao (m) bình phương."><option value="">-- Chọn đáp án --</option><option value="bmi">cân nặng / chiều cao ** 2</option><option value="sum">cân nặng + chiều cao</option><option value="wrong">chiều cao / cân nặng ** 2</option></select></div>
+    <div class="quiz-item"><label for="q6">6. Nếu giá là 500.000đ và giảm 20%, giá còn lại là bao nhiêu?</label><select id="q6" data-answer="400000" data-explain="Giá còn lại = giá gốc × (1 − phần trăm giảm / 100) = 400.000đ."><option value="">-- Chọn đáp án --</option><option value="100000">100.000đ</option><option value="400000">400.000đ</option><option value="480000">480.000đ</option></select></div>
+    <div class="quiz-item"><label for="q7">7. Với bán kính r = 2 và pi = 3.14159, diện tích hình tròn gần bằng bao nhiêu?</label><select id="q7" data-answer="area" data-explain="Diện tích = pi × r ** 2 = 3.14159 × 4 = 12.56636."><option value="">-- Chọn đáp án --</option><option value="area">12.56636</option><option value="circumference">12.56636 là chu vi, diện tích là 6.28318</option><option value="4">4</option></select></div>
+    <div class="quiz-item"><label for="q8">8. Toán tử nào chia lấy phần nguyên?</label><select id="q8" data-answer="floor" data-explain="// là phép chia lấy phần nguyên; / tạo kết quả chia thông thường."><option value="">-- Chọn đáp án --</option><option value="divide">/</option><option value="floor">//</option><option value="mod">%</option></select></div>
+    <div class="actions"><button type="button" id="gradeQuiz">Chấm 8 câu</button><button type="button" class="secondary" id="resetQuiz">Làm lại</button></div>
+    <div id="quizResult" class="quiz-result" role="status" aria-live="polite"></div>
+    <div id="rewardPanel" class="reward-panel" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="real-grader" id="grader">
+    <h2>Máy chấm code Python 🧪</h2>
+    <p>Để chấm 10 TODO trong các file bài tập của bạn, chạy lệnh này trong Terminal tại thư mục gốc dự án:</p>
+    <code class="command">py weeks/week-02-variables-types/assessment/core-exercises/student_journey.py --student</code>
+    <p>Nếu máy không nhận lệnh <code>py</code>, thay bằng <code>python</code>. Bộ chấm sẽ tạo báo cáo ở <code>.learner-output/week02-journey.html</code>. Chỉ chạy code do bạn viết hoặc tin cậy.</p>
+    <button type="button" id="copyCommand">Sao chép lệnh</button>
+    <span id="copyStatus" role="status" aria-live="polite"></span>
+  </section>
+
+  <div class="actions">
+    <button type="button" id="resetButton" class="secondary">Bỏ dấu và xóa tiến độ đã lưu</button>
+  </div>
+  <p class="muted">Các dấu chọn được lưu trong trình duyệt trên thiết bị này. Trang không gửi dữ liệu qua Internet.</p>
+</main>
+<div id="confettiLayer" class="confetti-layer" aria-hidden="true"></div>
+<script>
+  "use strict";
+  const boxes = Array.from(document.querySelectorAll("input[type=checkbox]"));
+  const storageKey = "python-journey-w02-self-check-v1";
+
+  function update() {
+    let completed = 0;
+    let earned = 0;
+    const requiredBoxes = boxes.filter(box => box.dataset.points);
+    for (const box of boxes) {
+      if (box.checked && box.dataset.points) {
+        completed += 1;
+        earned += Number(box.dataset.points);
+      }
+      box.closest(".task")?.classList.toggle("is-done", box.checked);
+    }
+    document.querySelector("#progress").value = completed;
+    document.querySelector("#progressText").textContent = `Đã kiểm tra ${completed}/10 TODO bắt buộc`;
+    document.querySelector("#scoreText").textContent = `Điểm tự đánh giá: ${earned.toLocaleString("vi-VN", { maximumFractionDigits: 2 })}/10`;
+    const next = requiredBoxes.find(box => !box.checked);
+    const nextStep = document.querySelector("#nextStep");
+    if (next) {
+      const taskName = next.closest(".task").querySelector("strong").textContent;
+      const sectionId = next.closest("section").id;
+      const sectionName = next.closest("section").querySelector("h2").textContent;
+      nextStep.innerHTML = `Bước tiếp theo: ${sectionName} · ${taskName}. <a href="#${sectionId}">Đi tới bài này →</a>`;
+      nextStep.classList.remove("complete");
+    } else {
+      nextStep.textContent = "🎉 Đã đánh dấu đủ 10 TODO! Hãy chạy Máy chấm code để xác nhận bài làm.";
+      nextStep.classList.add("complete");
+    }
+    const saved = Object.fromEntries(boxes.map(box => [box.dataset.id, box.checked]));
+    try { localStorage.setItem(storageKey, JSON.stringify(saved)); } catch { /* Lưu trữ có thể bị tắt trong trình duyệt. */ }
+  }
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    for (const box of boxes) box.checked = saved[box.dataset.id] === true;
+  } catch { /* Nếu không có tiến độ đã lưu, bắt đầu với các ô chưa đánh dấu. */ }
+  for (const box of boxes) box.addEventListener("change", update);
+  document.querySelector("#resetButton").addEventListener("click", () => {
+    for (const box of boxes) box.checked = false;
+    try { localStorage.removeItem(storageKey); } catch { /* Bỏ qua nếu lưu trữ bị tắt. */ }
+    update();
+  });
+  update();
+
+  const filterButtons = Array.from(document.querySelectorAll(".filter-button"));
+  for (const button of filterButtons) {
+    button.addEventListener("click", () => {
+      for (const other of filterButtons) other.setAttribute("aria-pressed", String(other === button));
+      for (const box of boxes) {
+        const task = box.closest(".task");
+        const shouldShow = button.dataset.filter === "all"
+          || (button.dataset.filter === "done" && box.checked)
+          || (button.dataset.filter === "todo" && !box.checked);
+        task.hidden = !shouldShow;
+      }
+    });
+  }
+
+  const quizItems = Array.from(document.querySelectorAll(".quiz-item select"));
+  const quizResult = document.querySelector("#quizResult");
+  const rewardPanel = document.querySelector("#rewardPanel");
+  const luckMessages = [
+    "Chúc bạn bình tĩnh, tự tin và gặp nhiều may mắn!",
+    "Bạn làm được mà — đọc kỹ câu hỏi rồi chọn đáp án nhé!",
+    "Mỗi câu đúng là một bước tiến. Chúc bạn thật nhiều ⭐!",
+    "Sẵn sàng chưa? Python đang chờ bạn chinh phục!",
+  ];
+  document.querySelector("#luckMessage").textContent = luckMessages[Math.floor(Math.random() * luckMessages.length)];
+
+  function celebrate() {
+    const layer = document.querySelector("#confettiLayer");
+    const pieces = ["✨", "⭐", "🎉", "💜", "💚"];
+    for (let i = 0; i < 36; i += 1) {
+      const piece = document.createElement("span");
+      piece.className = "confetti";
+      piece.textContent = pieces[i % pieces.length];
+      piece.style.setProperty("--x", `${Math.random() * 100}%`);
+      piece.style.setProperty("--drift", `${Math.random() * 180 - 90}px`);
+      piece.style.setProperty("--size", `${14 + Math.random() * 15}px`);
+      piece.style.setProperty("--duration", `${1.5 + Math.random() * 1.4}s`);
+      piece.style.setProperty("--delay", `${Math.random() * 0.3}s`);
+      piece.style.setProperty("--color", ["#f4b942", "#6d62df", "#39b98f"][i % 3]);
+      layer.append(piece);
+      window.setTimeout(() => piece.remove(), 3400);
+    }
+  }
+
+  document.querySelector("#gradeQuiz").addEventListener("click", () => {
+    let score = 0;
+    let unanswered = 0;
+    for (const answer of quizItems) {
+      answer.classList.remove("correct", "incorrect");
+      if (!answer.value) { unanswered += 1; continue; }
+      const correct = answer.value === answer.dataset.answer;
+      if (correct) score += 1;
+      answer.classList.add(correct ? "correct" : "incorrect");
+    }
+    quizResult.className = `quiz-result show ${score === quizItems.length ? "good" : "try"}`;
+    quizResult.textContent = unanswered
+      ? `Bạn đạt ${score}/${quizItems.length}. Còn ${unanswered} câu chưa chọn; chọn hết để xem kết quả đầy đủ.`
+      : `Bạn đạt ${score}/${quizItems.length}. ` + (score === quizItems.length ? "Xuất sắc! Bạn đã nắm chắc các ý chính." : "Xem lại các câu được đánh dấu rồi thử lại nhé.");
+    const stars = score * 5;
+    const badge = score >= 8 ? "🏆 Huy hiệu Bậc thầy Python" : score >= 6 ? "🚀 Huy hiệu Siêu khám phá" : score >= 4 ? "🌟 Huy hiệu Chăm chỉ" : "🌱 Huy hiệu Khởi đầu";
+    const gift = score === 8 ? "Bạn mở khóa phần quà đặc biệt: một tràng pháo giấy!" : score >= 4 ? "Tuyệt lắm! Huy hiệu mới đã được mở khóa." : "Cảm ơn bạn đã thử sức. Làm lại để mở huy hiệu tiếp theo nhé!";
+    rewardPanel.innerHTML = `<div class="reward-stars">🎁 +${stars} sao thưởng</div><div class="reward-badge">${badge}</div><p>${gift}</p>`;
+    rewardPanel.classList.add("show");
+    if (score === quizItems.length) celebrate();
+    for (const answer of quizItems) {
+      if (answer.value && answer.value !== answer.dataset.answer) {
+        const explanation = document.createElement("small");
+        explanation.className = "explanation";
+        explanation.textContent = ` Gợi ý: ${answer.dataset.explain}`;
+        answer.parentElement.querySelector(".explanation")?.remove();
+        answer.parentElement.append(explanation);
+      } else {
+        answer.parentElement.querySelector(".explanation")?.remove();
+      }
+    }
+  });
+  document.querySelector("#resetQuiz").addEventListener("click", () => {
+    for (const answer of quizItems) {
+      answer.value = "";
+      answer.classList.remove("correct", "incorrect");
+      answer.parentElement.querySelector(".explanation")?.remove();
+    }
+    quizResult.className = "quiz-result";
+    quizResult.textContent = "";
+    rewardPanel.classList.remove("show");
+    rewardPanel.textContent = "";
+  });
+  document.querySelector("#copyCommand").addEventListener("click", async () => {
+    const command = "py weeks/week-02-variables-types/assessment/core-exercises/student_journey.py --student";
+    const status = document.querySelector("#copyStatus");
+    try {
+      await navigator.clipboard.writeText(command);
+      status.textContent = " Đã sao chép!";
+    } catch {
+      status.textContent = " Trình duyệt không cho phép sao chép ở file cục bộ; hãy tự sao chép lệnh phía trên.";
+    }
+  });
+</script>
+</body>
+</html>
