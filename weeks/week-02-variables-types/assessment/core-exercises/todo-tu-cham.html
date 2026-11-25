@@ -129,6 +129,14 @@
     .check-line { padding: 3px 0; font-size: .9rem; }
     .check-line.pass { color: #176849; }
     .check-line.retry { color: #a34c37; }
+    .editor-section { border: 1px solid #d9defe; background: linear-gradient(145deg, #fff, #f7f7ff); }
+    .editor-card { margin: 15px 0; padding: 15px; border: 1px solid #e3e7f3; border-radius: 15px; background: white; }
+    .editor-heading { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .editor-heading strong { color: #3442a4; }
+    .editor-card textarea { display: block; width: 100%; min-height: 230px; padding: 14px; resize: vertical; border: 1px solid #cbd4e5; border-radius: 11px; background: #111a2e; color: #e2edff; font: 13px/1.6 Consolas, "Cascadia Code", monospace; tab-size: 4; }
+    .editor-card textarea:focus { border-color: #6877ed; }
+    .editor-help { color: var(--ink-soft); font-size: .88rem; }
+    .editor-status { color: #277253; font-size: .88rem; }
     .quiz-item { padding: 15px 0; border-top: 1px solid #edf0f6; }
     .quiz-item label { display: block; font-weight: 700; margin-bottom: 9px; }
     .quiz-item select { width: 100%; max-width: 520px; padding: 10px 12px; border: 1px solid #d5ddec; border-radius: 10px; background: white; color: #18243d; font: inherit; }
@@ -237,6 +245,27 @@
     <label class="task"><input type="checkbox" data-id="opt-ex03"><span><strong>Thử thách:</strong> Đổi VNĐ sang USD. Mục này không tính điểm tự luyện.</span><span class="points">Tùy chọn</span></label>
   </section>
 
+  <section class="editor-section" id="sourceEditor">
+    <h2>Nhập và sửa mã nguồn trực tiếp ✍️</h2>
+    <p class="quiz-intro">Bạn có thể viết hoặc dán mã của ba bài vào đây. Bản nháp tự lưu trên trình duyệt của thiết bị này.</p>
+    <article class="editor-card">
+      <div class="editor-heading"><strong>📘 ex01_variables.py</strong><span class="editor-help">Bài 01 · Biến</span></div>
+      <textarea id="sourceEx01" rows="12" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Mã nguồn bài 01" placeholder="# TODO 1: tạo biến và in giá trị, type()&#10;# TODO 2: hoán đổi a, b&#10;# TODO 3: dùng +=, -=, *=, //= và in từng bước"></textarea>
+    </article>
+    <article class="editor-card">
+      <div class="editor-heading"><strong>🔄 ex02_type_conversion.py</strong><span class="editor-help">Bài 02 · Chuyển kiểu</span></div>
+      <textarea id="sourceEx02" rows="14" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Mã nguồn bài 02" placeholder="# TODO 1: đổi '42' sang int và cộng 8&#10;# TODO 2: đổi pi sang int&#10;# TODO 3: kiểm tra sáu giá trị bool()&#10;# TODO 4: nhập chiều cao, cân nặng và tính BMI"></textarea>
+    </article>
+    <article class="editor-card">
+      <div class="editor-heading"><strong>🧮 ex03_input_calc.py</strong><span class="editor-help">Bài 03 · Input & phép tính</span></div>
+      <textarea id="sourceEx03" rows="14" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Mã nguồn bài 03" placeholder="# TODO 1: nhập hai số, in tổng, hiệu, tích, thương&#10;# TODO 2: nhập bán kính, tính diện tích và chu vi&#10;# TODO 3: nhập giá và phần trăm giảm, tính giá sau giảm"></textarea>
+    </article>
+    <div class="actions"><button type="button" id="gradeEditors">Tự chấm mã đang nhập</button><button type="button" id="downloadEditors" class="secondary">Tải xuống file .py</button><button type="button" id="clearEditors" class="secondary">Xóa bản nháp</button></div>
+    <p id="editorStatus" class="editor-status" role="status" aria-live="polite">Bản nháp được lưu tự động trong trình duyệt; chưa gửi đi đâu.</p>
+    <div id="editorResults" class="upload-results" role="status" aria-live="polite"></div>
+    <p class="upload-note"><strong>Lưu ý:</strong> Nút tự chấm chỉ rà dấu hiệu code, không chạy chương trình. Tải file xuống rồi mở trong VS Code để chạy, hoặc dùng bộ chấm code Python bên dưới.</p>
+  </section>
+
   <section class="upload-grader" id="uploadGrader">
     <h2>Thêm file để tự chấm 📂</h2>
     <p class="quiz-intro">Chọn ba file bài tập trên máy. Trình duyệt sẽ đọc nội dung ngay tại đây và kiểm tra các dấu hiệu code theo TODO bắt buộc.</p>
@@ -333,6 +362,7 @@
   const uploadConfig = [
     {
       input: document.querySelector("#uploadEx01"), name: document.querySelector("#nameEx01"), label: "Bài 01 — Biến", points: [1, 1, 1],
+      editor: document.querySelector("#sourceEx01"),
       checks: source => {
         const normalized = source.replace(/\s+/g, " ");
         const prints = Array.from(source.matchAll(/print\s*\(([^)]*)\)/g), match => match[1]);
@@ -345,6 +375,7 @@
     },
     {
       input: document.querySelector("#uploadEx02"), name: document.querySelector("#nameEx02"), label: "Bài 02 — Chuyển kiểu", points: [0.75, 0.75, 0.75, 1.25],
+      editor: document.querySelector("#sourceEx02"),
       checks: source => {
         const compact = source.replace(/\s+/g, "");
         return [
@@ -357,6 +388,7 @@
     },
     {
       input: document.querySelector("#uploadEx03"), name: document.querySelector("#nameEx03"), label: "Bài 03 — Phép tính", points: [1.5, 1, 1],
+      editor: document.querySelector("#sourceEx03"),
       checks: source => {
         const compact = source.replace(/\s+/g, "");
         return [
@@ -367,6 +399,77 @@
       }
     },
   ];
+  const editorStoragePrefix = "python-journey-w02-source-";
+  const editorStatus = document.querySelector("#editorStatus");
+  const editorResults = document.querySelector("#editorResults");
+  for (const config of uploadConfig) {
+    const key = `${editorStoragePrefix}${config.editor.id}`;
+    try {
+      const savedSource = localStorage.getItem(key);
+      if (savedSource !== null) config.editor.value = savedSource;
+    } catch { /* Có thể trình duyệt đang tắt lưu trữ cục bộ. */ }
+    config.editor.addEventListener("input", () => {
+      try {
+        localStorage.setItem(key, config.editor.value);
+        editorStatus.textContent = "Đã lưu bản nháp trong trình duyệt trên thiết bị này.";
+      } catch {
+        editorStatus.textContent = "Không lưu được bản nháp; hãy tải file xuống để giữ lại code.";
+      }
+    });
+  }
+  document.querySelector("#gradeEditors").addEventListener("click", () => {
+    editorResults.replaceChildren();
+    let earnedPoints = 0;
+    let totalPoints = 0;
+    for (const config of uploadConfig) {
+      const source = config.editor.value.replace(/^[ \t]*#.*$/gm, "");
+      const results = config.checks(source);
+      const card = document.createElement("article");
+      card.className = "file-result";
+      const heading = document.createElement("strong");
+      heading.textContent = config.label;
+      card.append(heading);
+      results.forEach(([passed, description], index) => {
+        const points = config.points[index];
+        totalPoints += points;
+        if (passed) earnedPoints += points;
+        const line = document.createElement("div");
+        line.className = `check-line ${passed ? "pass" : "retry"}`;
+        line.textContent = `${passed ? "✓ Có vẻ đạt" : "↻ Cần xem lại"} · ${description} (${passed ? points : 0}/${points} điểm ước tính)`;
+        card.append(line);
+      });
+      editorResults.append(card);
+    }
+    const score = document.createElement("div");
+    score.className = "upload-score";
+    score.textContent = `Điểm kiểm tra tĩnh ước tính: ${earnedPoints.toLocaleString("vi-VN", { maximumFractionDigits: 2 })}/10`;
+    editorResults.prepend(score);
+    editorResults.classList.add("show");
+    editorResults.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+  document.querySelector("#downloadEditors").addEventListener("click", () => {
+    for (const config of uploadConfig) {
+      const blob = new Blob([config.editor.value], { type: "text/x-python;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = config.input.accept.includes("text/x-python")
+        ? ["ex01_variables.py", "ex02_type_conversion.py", "ex03_input_calc.py"][uploadConfig.indexOf(config)]
+        : "bai-tap.py";
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    editorStatus.textContent = "Đã gửi ba file .py vào mục tải xuống của trình duyệt.";
+  });
+  document.querySelector("#clearEditors").addEventListener("click", () => {
+    for (const config of uploadConfig) {
+      config.editor.value = "";
+      try { localStorage.removeItem(`${editorStoragePrefix}${config.editor.id}`); } catch { /* Bỏ qua nếu lưu trữ bị tắt. */ }
+    }
+    editorResults.classList.remove("show");
+    editorResults.replaceChildren();
+    editorStatus.textContent = "Bản nháp đã xóa.";
+  });
   const fileButton = document.querySelector("#gradeFiles");
   const uploadResults = document.querySelector("#uploadResults");
   for (const config of uploadConfig) {
@@ -383,7 +486,7 @@
     let earnedPoints = 0;
     try {
       for (const config of uploadConfig) {
-        const source = (await config.input.files[0].text()).replace(/^\s*#.*$/gm, "");
+        const source = (await config.input.files[0].text()).replace(/^[ \t]*#.*$/gm, "");
         const results = config.checks(source);
         const card = document.createElement("article");
         card.className = "file-result";
