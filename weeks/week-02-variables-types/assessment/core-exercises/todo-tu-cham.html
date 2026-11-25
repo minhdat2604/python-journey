@@ -114,6 +114,21 @@
     .task[hidden] { display: none; }
     .task.is-done { background: #f0fbf6; }
     .quiz-intro { color: var(--ink-soft); margin-bottom: 18px; }
+    .upload-grader { border: 1px solid #cfe8df; background: linear-gradient(145deg, #fff, #f0fbf6); }
+    .upload-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 18px 0; }
+    .upload-card { display: flex; flex-direction: column; gap: 9px; padding: 15px; border: 1px dashed #a8cfc1; border-radius: 14px; background: white; }
+    .upload-card strong { color: #176849; }
+    .upload-card input { width: 100%; font: inherit; font-size: .84rem; }
+    .file-name { min-height: 1.3em; overflow-wrap: anywhere; color: var(--ink-soft); font-size: .82rem; }
+    .upload-note { padding: 12px 14px; border-radius: 11px; color: #4c5d71; background: #f1f5fa; font-size: .9rem; line-height: 1.5; }
+    .upload-results { display: none; margin-top: 18px; }
+    .upload-results.show { display: block; }
+    .upload-score { padding: 15px; margin-bottom: 12px; border-radius: 13px; color: #173c31; background: #def7ec; font-size: 1.15rem; font-weight: 850; }
+    .file-result { padding: 12px 14px; margin: 8px 0; border: 1px solid #e4e9f1; border-radius: 11px; background: white; }
+    .file-result strong { display: block; margin-bottom: 5px; }
+    .check-line { padding: 3px 0; font-size: .9rem; }
+    .check-line.pass { color: #176849; }
+    .check-line.retry { color: #a34c37; }
     .quiz-item { padding: 15px 0; border-top: 1px solid #edf0f6; }
     .quiz-item label { display: block; font-weight: 700; margin-bottom: 9px; }
     .quiz-item select { width: 100%; max-width: 520px; padding: 10px 12px; border: 1px solid #d5ddec; border-radius: 10px; background: white; color: #18243d; font: inherit; }
@@ -151,6 +166,7 @@
       header, section, .notice { padding: 19px; border-radius: 17px; }
       header::after { right: 17px; top: 16px; font-size: 4.5rem; }
       .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .upload-grid { grid-template-columns: 1fr; }
       .task { grid-template-columns: 25px 1fr; }
       .points { grid-column: 2; justify-self: start; }
     }
@@ -219,6 +235,19 @@
     <label class="task"><input type="checkbox" data-id="ex03-2" data-points="1"><span><strong>TODO 2:</strong> Nhập bán kính; dùng <code>pi = 3.14159</code> tính diện tích và chu vi hình tròn.</span><span class="points">1 điểm</span></label>
     <label class="task"><input type="checkbox" data-id="ex03-3" data-points="1"><span><strong>TODO 3:</strong> Nhập giá gốc và phần trăm giảm; tính giá sau giảm. Thử ví dụ 500000 và 20% để được 400000.</span><span class="points">1 điểm</span></label>
     <label class="task"><input type="checkbox" data-id="opt-ex03"><span><strong>Thử thách:</strong> Đổi VNĐ sang USD. Mục này không tính điểm tự luyện.</span><span class="points">Tùy chọn</span></label>
+  </section>
+
+  <section class="upload-grader" id="uploadGrader">
+    <h2>Thêm file để tự chấm 📂</h2>
+    <p class="quiz-intro">Chọn ba file bài tập trên máy. Trình duyệt sẽ đọc nội dung ngay tại đây và kiểm tra các dấu hiệu code theo TODO bắt buộc.</p>
+    <div class="upload-grid">
+      <label class="upload-card"><strong>📘 Bài 01 — Biến</strong><span>Chọn <code>ex01_variables.py</code></span><input id="uploadEx01" type="file" accept=".py,text/x-python"><span id="nameEx01" class="file-name">Chưa chọn file</span></label>
+      <label class="upload-card"><strong>🔄 Bài 02 — Chuyển kiểu</strong><span>Chọn <code>ex02_type_conversion.py</code></span><input id="uploadEx02" type="file" accept=".py,text/x-python"><span id="nameEx02" class="file-name">Chưa chọn file</span></label>
+      <label class="upload-card"><strong>🧮 Bài 03 — Phép tính</strong><span>Chọn <code>ex03_input_calc.py</code></span><input id="uploadEx03" type="file" accept=".py,text/x-python"><span id="nameEx03" class="file-name">Chưa chọn file</span></label>
+    </div>
+    <div class="actions"><button type="button" id="gradeFiles" disabled>Chấm các file đã chọn</button><button type="button" id="clearFiles" class="secondary">Xóa file</button></div>
+    <div id="uploadResults" class="upload-results" role="status" aria-live="polite"></div>
+    <p class="upload-note"><strong>Giới hạn:</strong> Đây là kiểm tra tĩnh trong trình duyệt, không chạy code Python và điểm chỉ là ước tính. File không được tải lên mạng. Muốn kiểm tra kết quả chạy thật, dùng Máy chấm code bên dưới.</p>
   </section>
 
   <section id="quiz">
@@ -300,6 +329,101 @@
     update();
   });
   update();
+
+  const uploadConfig = [
+    {
+      input: document.querySelector("#uploadEx01"), name: document.querySelector("#nameEx01"), label: "Bài 01 — Biến", points: [1, 1, 1],
+      checks: source => {
+        const normalized = source.replace(/\s+/g, " ");
+        const prints = Array.from(source.matchAll(/print\s*\(([^)]*)\)/g), match => match[1]);
+        return [
+          [ /\bten\s*=\s*["'][^"']+["']/.test(source) && /\btuoi\s*=\s*\d+\b/.test(source) && /\bdiem_tb\s*=\s*\d+\.\d+\b/.test(source) && /\bdang_hoc\s*=\s*(True|False)\b/.test(source) && ["ten", "tuoi", "diem_tb", "dang_hoc"].every(name => new RegExp(`type\\s*\\(\\s*${name}\\s*\\)`).test(source)) && ["ten", "tuoi", "diem_tb", "dang_hoc"].every(name => prints.some(line => line.includes(name))), "Khai báo 4 kiểu dữ liệu và in biến cùng type()." ],
+          [ /\ba\s*=\s*10\b/.test(source) && /\bb\s*=\s*20\b/.test(source) && /\ba\s*,\s*b\s*=\s*b\s*,\s*a\b/.test(normalized), "Hoán đổi a, b bằng a, b = b, a." ],
+          [ /\bx\s*=\s*100\b/.test(source) && /\bx\s*\+=/.test(source) && /\bx\s*-=/ .test(source) && /\bx\s*\*=/.test(source) && /\bx\s*\/\/=/.test(source) && (source.match(/print\s*\([^)]*\bx\b[^)]*\)/g) || []).length >= 4, "Dùng đủ +=, -=, *=, //= trên x và in x sau mỗi bước." ],
+        ];
+      }
+    },
+    {
+      input: document.querySelector("#uploadEx02"), name: document.querySelector("#nameEx02"), label: "Bài 02 — Chuyển kiểu", points: [0.75, 0.75, 0.75, 1.25],
+      checks: source => {
+        const compact = source.replace(/\s+/g, "");
+        return [
+          [ /so_text\s*=\s*["']42["']/.test(source) && /int\s*\(\s*so_text\s*\)/.test(source) && /so\s*\+\s*8|int\s*\(\s*so_text\s*\)\s*\+\s*8/.test(source) && /print\s*\(/.test(source), "Đổi '42' sang int, cộng 8 và in kết quả." ],
+          [ /pi\s*=\s*3\.14159/.test(source) && /int\s*\(\s*pi\s*\)/.test(source) && /print\s*\(/.test(source), "Dùng int(pi) với pi = 3.14159 và in kết quả." ],
+          [ ["bool(0)", "bool(1)", "bool(\"\")", "bool(\"hello\")", "bool([])", "bool([1,2])"].every(item => compact.includes(item.replace(/\s/g, ""))), "In bool() cho đủ sáu giá trị trong đề." ],
+          [ (source.match(/float\s*\(\s*input\s*\(/g) || []).length >= 2 && /can_nang\s*\/\s*\(?\s*chieu_cao\s*\*\*\s*2/.test(source) && /\.1f/.test(source), "Nhập chiều cao/cân nặng, tính BMI và định dạng 1 chữ số thập phân." ],
+        ];
+      }
+    },
+    {
+      input: document.querySelector("#uploadEx03"), name: document.querySelector("#nameEx03"), label: "Bài 03 — Phép tính", points: [1.5, 1, 1],
+      checks: source => {
+        const compact = source.replace(/\s+/g, "");
+        return [
+          [ (source.match(/input\s*\(/g) || []).length >= 2 && ["+", "-", "*", "/"].every(op => source.includes(op)) && /print\s*\(/.test(source), "Nhập hai số và in tổng, hiệu, tích, thương." ],
+          [ /r\s*=\s*float\s*\(\s*input\s*\(/.test(source) && /pi\s*=\s*3\.14159/.test(source) && /r\s*\*\*\s*2/.test(source) && /2\s*\*\s*pi\s*\*\s*r/.test(compact), "Nhập bán kính và tính diện tích, chu vi với pi = 3.14159." ],
+          [ (source.match(/input\s*\(/g) || []).length >= 4 && /gia_goc/.test(source) && /phan_tram_giam/.test(source) && /100/.test(source) && /print\s*\(/.test(source), "Nhập giá và phần trăm giảm, rồi in giá sau giảm." ],
+        ];
+      }
+    },
+  ];
+  const fileButton = document.querySelector("#gradeFiles");
+  const uploadResults = document.querySelector("#uploadResults");
+  for (const config of uploadConfig) {
+    config.input.addEventListener("change", () => {
+      config.name.textContent = config.input.files[0]?.name || "Chưa chọn file";
+      fileButton.disabled = !uploadConfig.every(item => item.input.files.length > 0);
+    });
+  }
+  fileButton.addEventListener("click", async () => {
+    fileButton.disabled = true;
+    fileButton.textContent = "Đang đọc file…";
+    uploadResults.replaceChildren();
+    let totalPoints = 0;
+    let earnedPoints = 0;
+    try {
+      for (const config of uploadConfig) {
+        const source = (await config.input.files[0].text()).replace(/^\s*#.*$/gm, "");
+        const results = config.checks(source);
+        const card = document.createElement("article");
+        card.className = "file-result";
+        const heading = document.createElement("strong");
+        heading.textContent = `${config.label} · ${config.input.files[0].name}`;
+        card.append(heading);
+        results.forEach(([passed, description], index) => {
+          const line = document.createElement("div");
+          line.className = `check-line ${passed ? "pass" : "retry"}`;
+          const points = config.points[index];
+          totalPoints += points;
+          if (passed) earnedPoints += points;
+          line.textContent = `${passed ? "✓ Có vẻ đạt" : "↻ Cần xem lại"} · ${description} (${passed ? points : 0}/${points} điểm ước tính)`;
+          card.append(line);
+        });
+        uploadResults.append(card);
+      }
+      const score = document.createElement("div");
+      score.className = "upload-score";
+      score.textContent = `Điểm kiểm tra tĩnh ước tính: ${earnedPoints.toLocaleString("vi-VN", { maximumFractionDigits: 2 })}/10`;
+      uploadResults.prepend(score);
+      uploadResults.classList.add("show");
+      uploadResults.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } catch (error) {
+      uploadResults.textContent = `Không đọc được file: ${error.message}`;
+      uploadResults.classList.add("show");
+    } finally {
+      fileButton.disabled = !uploadConfig.every(item => item.input.files.length > 0);
+      fileButton.textContent = "Chấm các file đã chọn";
+    }
+  });
+  document.querySelector("#clearFiles").addEventListener("click", () => {
+    for (const config of uploadConfig) {
+      config.input.value = "";
+      config.name.textContent = "Chưa chọn file";
+    }
+    fileButton.disabled = true;
+    uploadResults.classList.remove("show");
+    uploadResults.replaceChildren();
+  });
 
   const filterButtons = Array.from(document.querySelectorAll(".filter-button"));
   for (const button of filterButtons) {
